@@ -30,11 +30,11 @@ def all_consultations_by_doctor_id(id)
   p.last_name,
   doctors.first_name AS doctor_first_name, 
   doctors.specialty, 
-  c.date FROM consultations c
+  c.date 
+  FROM consultations c
   JOIN patients AS p ON p.id = c.patient_id
   JOIN doctors ON doctors.id = c.doctor_id
-  WHERE doctors.id = #{id}
-  "
+  WHERE doctors.id = #{id}"
   DB.results_as_hash = true
   consultations = DB.execute(query)
 end
