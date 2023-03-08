@@ -1,6 +1,7 @@
 require 'sqlite3'
 require_relative 'patient'
 require_relative 'doctor'
+require_relative 'consultation'
 
 DB = SQLite3::Database.new('hospital.sqlite')
 
@@ -23,19 +24,27 @@ class Hospital
 
     def all_consultations_by_doctor_id(id)
       query = "SELECT
-      p.first_name,
-      p.last_name,
-      doctors.first_name AS doctor_first_name, 
-      doctors.specialty, 
-      c.date 
+      p.id AS patient_id,
+      d.id AS doctor_id,
+      c.id AS id,
+      c.date AS date 
       FROM consultations c
-      JOIN patients AS p ON p.id = c.patient_id
-      JOIN doctors ON doctors.id = c.doctor_id
-      WHERE doctors.id = #{id}"
+      JOIN patients p ON p.id = c.patient_id
+      JOIN doctors d ON d.id = c.doctor_id
+      WHERE d.id = #{id}"
       DB.results_as_hash = true
       consultations = DB.execute(query)
+      consultations.map do |consultation|
+        patient_params = DB.execute("SELECT * FROM patients WHERE id = #{consultation['patient_id']}").first
+        consultation['patient'] = Patient.new(patient_params)
+        doctor_params = DB.execute("SELECT * FROM doctors WHERE id = #{consultation['doctor_id']}").first
+        consultation['doctor'] = Doctor.new(doctor_params)
+        Consultation.new(consultation)
+      end
     end
 end
-p all_patients
-p all_consultations_by_doctor_id(2) # Returns a empty Array!
-p all_consultations_by_doctor_id(1) # Returns a Array with 3 hashes inside
+
+hospital = Hospital.new
+p hospital.all_patients
+p hospital.all_consultations_by_doctor_id(2) # Returns a empty Array!
+p hospital.all_consultations_by_doctor_id(1) # Returns a Array with 3 hashes inside
